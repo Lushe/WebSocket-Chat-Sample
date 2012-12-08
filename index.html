@@ -1,0 +1,71 @@
+<html style="width: 100%; height: 100%; margin: 0px;">
+<head>
+	<meta http-equiv="Content-Type" content="text/plain" />
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<title>WebSocket Chat Sample</title>
+</head>
+
+<body style="width: 100%; height: 100%; margin: 0px;">
+
+<script type="text/javascript">
+
+var connect_url = 'http://examples.com:3000';	// 接続先URLを指定します
+var socket = new io.connect(connect_url);		// サーバに接続します
+
+socket.on('handshake_first', function(message){		// サーバからhandshake_firstメッセージを受信した時の処理
+	if(message.status === 'accepted'){		// メッセージのstatusがacceptedの場合、サーバに処理を続行するように返答
+		socket.emit('handshake_second', {response: 'continue'});	// サーバにhandshake_secondメッセージを送信
+	}
+});
+
+socket.on('server_broadcast_message', function(message){	// サーバからserver_broadcast_messageを受信した時の処理
+	chat_append_log(message);	// チャットログに挿入する関数を実行（引数はサーバから受け取ったメッセージをそのまま渡します）
+});
+
+function chat_send_message(){	// サーバへメッセージを送信する際に呼び出される関数
+	if(window.event.keyCode === 13){	// キーコードを取得し、13（Enterキー）だった場合は送信を実行
+		var chat_name = document.getElementById('text_chat_name');	// 表示名を取得
+		var chat_color = document.getElementById('select_chat_color').options[document.getElementById('select_chat_color').selectedIndex].value;	// 表示色を取得
+		var chat_timestamp = Math.round(new Date().getTime() / 1000);	// UNIXタイムスタンプを取得
+		var chat_message = document.getElementById('text_chat_message');	// メッセージ（本文）を取得
+		var send_message = {name: chat_name.value, color: chat_color, timestamp: chat_timestamp, message: chat_message.value};	// 送信するメッセージを生成
+		if(chat_message.value !== ''){	// メッセージ（本文）が空ではない場合は送信を実行
+			socket.emit('client_send_message', send_message);	// サーバへメッセージを送信
+			chat_append_log(send_message);	// 自分から送信したメッセージはブロードキャストでは流れてこないので、チャットログに自分で挿入
+			chat_message.value = '';	// メッセージ（本文）入力欄をクリア
+		}
+	}
+}
+
+function chat_append_log(message){	// チャットログにメッセージを挿入する際に呼び出される関数
+	var chat_log = document.getElementById('div_chat_log');	// チャットログを表示するdiv要素を取得
+	var render = '';
+	var dateobj = new Date(message.timestamp * 1000);	// 指定したUNIXタイムスタンプからDateオブジェクトを取得
+	var timestamp_render = dateobj.getHours() + '時' + dateobj.getMinutes() + '分';	// 時刻表示部分をレンダリング
+
+	render = '<div style="margin: 1%;">' + message.name + ' さんの発言(' + timestamp_render +  '):<br><span style="margin-left: 1%; color: ' + message.color + '">' + message.message + '</span></div>';	// 表示名とメッセージ（本文）レンダリング
+
+	chat_log.innerHTML = render + chat_log.innerHTML;	// チャットログに挿入
+}
+
+</script>
+
+<div style="width: 100%; height: 2%; margin: 0px; background-color: gray; color: white;"></div>
+<div style="width: 95%; margin: 0px; padding-left: 5%; background-color: gray; color: white; font-size: 200%;">WebSocket Chat Sample</div>
+<div style="width: 100%; height: 2%; margin: 0px; background-color: gray; color: white;"></div>
+
+<div style="width: 95%; margin: 0px; padding-left: 5%;">
+表示名: <input type="text" id="text_chat_name" value="名無し"><br>
+表示色: 
+<select id="select_chat_color">
+	<option value="black" selected>黒</option>
+	<option value="red">赤</option>
+	<option value="green">緑</option>
+	<option value="blue">青</option>
+</select>
+<input type="text" id="text_chat_message" onkeypress="chat_send_message();">
+<div id="div_chat_log"></div>
+</div>
+
+</body>
+</html>

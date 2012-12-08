@@ -1,6 +1,7 @@
-<html style="width: 100%; height: 100%; margin: 0px;">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html style="width: 100%; height: 100%; margin: 0px;" lang="ja">
 <head>
-	<meta http-equiv="Content-Type" content="text/plain" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 	<title>WebSocket Chat Sample</title>
 </head>
@@ -22,8 +23,16 @@ socket.on('server_broadcast_message', function(message){	// サーバからserve
 	chat_append_log(message);	// チャットログに挿入する関数を実行（引数はサーバから受け取ったメッセージをそのまま渡します）
 });
 
-function chat_send_message(){	// サーバへメッセージを送信する際に呼び出される関数
-	if(window.event.keyCode === 13){	// キーコードを取得し、13（Enterキー）だった場合は送信を実行
+function chat_send_message(event){	// サーバへメッセージを送信する際に呼び出される関数
+	var keycode = '';
+	if(event.keyCode != 0){
+		keycode = event.keyCode;
+	}
+	else{
+		keycode = event.charCode;
+	}
+
+	if(keycode === 13){	// キーコードを取得し、13（Enterキー）だった場合は送信を実行
 		var chat_name = document.getElementById('text_chat_name');	// 表示名を取得
 		var chat_color = document.getElementById('select_chat_color').options[document.getElementById('select_chat_color').selectedIndex].value;	// 表示色を取得
 		var chat_timestamp = Math.round(new Date().getTime() / 1000);	// UNIXタイムスタンプを取得
@@ -63,7 +72,7 @@ function chat_append_log(message){	// チャットログにメッセージを挿
 	<option value="green">緑</option>
 	<option value="blue">青</option>
 </select>
-<input type="text" id="text_chat_message" onkeypress="chat_send_message();">
+<input type="text" id="text_chat_message" onkeypress="chat_send_message(event);">
 <div id="div_chat_log"></div>
 </div>
 
